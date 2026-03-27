@@ -15,10 +15,9 @@ const Login = () => {
 
         // Simulate API call delay
         setTimeout(() => {
-            // Frontend validation - hardcoded credentials
-            if (email === 'admin@sunjewellery.com' && password === 'admin123') {
+            if (email === import.meta.env.VITE_ADMIN_EMAIL && password === import.meta.env.VITE_ADMIN_PASSWORD) {
                 localStorage.setItem('isAuthenticated', 'true');
-                localStorage.setItem('adminKey', 'SunJewel^Admin#Key_8472!XpL9@Secure2026');
+                localStorage.setItem('adminKey', import.meta.env.VITE_ADMIN_KEY);
                 navigate('/admindashboard');
             } else {
                 setError('Invalid email or password. Please try again.');

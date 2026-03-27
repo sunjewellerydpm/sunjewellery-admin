@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import EditProductModal from '../components/EditProductModal';
 import DeleteConfirmModal from '../components/DeleteConfirmModal';
@@ -10,6 +10,9 @@ const ADMIN_KEY = localStorage.getItem('adminKey') || '';
 const AdminDashboard = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [activeTab, setActiveTab] = useState('dashboard');
     const [editingProduct, setEditingProduct] = useState(null);
     const [deletingProduct, setDeletingProduct] = useState(null);
@@ -24,7 +27,7 @@ const AdminDashboard = () => {
             navigate('/');
             return;
         }
-        fetchProducts();
+        fetchProducts(1);
     }, [navigate]);
 
     useEffect(() => {
@@ -36,28 +39,38 @@ const AdminDashboard = () => {
         }
     }, [location.pathname]);
 
-    const fetchProducts = async () => {
+    const fetchProducts = async (page) => {
         try {
-            setLoading(true);
-            let allProducts = [];
-            let currentPage = 1;
-            let totalPages = 1;
-
-            // Fetch all pages for the admin dashboard
-            while (currentPage <= totalPages) {
-                const response = await fetch(`${API_BASE}/products?page=${currentPage}`);
-                const data = await response.json();
-                allProducts = [...allProducts, ...(data.products || [])];
-                totalPages = data.totalPages || 1;
-                currentPage++;
+            if (page === 1) {
+                setLoading(true);
+            } else {
+                setLoadingMore(true);
             }
 
-            setProducts(allProducts.reverse());
+            const response = await fetch(`${API_BASE}/products?page=${page}`);
+            const data = await response.json();
+            const newProducts = (data.products || []).reverse();
+
+            if (page === 1) {
+                setProducts(newProducts);
+            } else {
+                setProducts(prev => [...prev, ...newProducts]);
+            }
+
+            setTotalPages(data.totalPages || 1);
+            setCurrentPage(page);
         } catch (error) {
             console.error('Error fetching products:', error);
-            setProducts([]);
+            if (page === 1) setProducts([]);
         } finally {
             setLoading(false);
+            setLoadingMore(false);
+        }
+    };
+
+    const handleLoadMore = () => {
+        if (currentPage < totalPages) {
+            fetchProducts(currentPage + 1);
         }
     };
 
@@ -85,7 +98,7 @@ const AdminDashboard = () => {
                     title: 'Product Updated',
                     message: 'The product has been successfully updated.'
                 });
-                fetchProducts();
+                fetchProducts(1);
             } else {
                 throw new Error('Failed to update product');
             }
@@ -114,7 +127,7 @@ const AdminDashboard = () => {
                     title: 'Product Deleted',
                     message: 'The product has been successfully deleted.'
                 });
-                fetchProducts();
+                fetchProducts(1);
             } else {
                 throw new Error('Failed to delete product');
             }
@@ -316,6 +329,39 @@ const AdminDashboard = () => {
                             </table>
                         )}
                     </div>
+
+                    {/* Load More Button */}
+                    {!loading && currentPage < totalPages && (
+                        <div style={{
+                            padding: '1.5rem',
+                            textAlign: 'center',
+                            borderTop: '1px solid var(--border)'
+                        }}>
+                            <button
+                                className="btn btn-secondary"
+                                onClick={handleLoadMore}
+                                disabled={loadingMore}
+                                style={{ minWidth: '160px' }}
+                            >
+                                {loadingMore ? (
+                                    <>
+                                        <div className="animate-spin" style={{
+                                            width: '16px',
+                                            height: '16px',
+                                            border: '2px solid var(--border)',
+                                            borderTopColor: 'var(--gold)',
+                                            borderRadius: '50%',
+                                            display: 'inline-block',
+                                            marginRight: '0.5rem'
+                                        }}></div>
+                                        Loading...
+                                    </>
+                                ) : (
+                                    `Load More (Page ${currentPage} of ${totalPages})`
+                                )}
+                            </button>
+                        </div>
+                    )}
                 </div>
             </main>
 
