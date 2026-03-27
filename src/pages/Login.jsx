@@ -20,7 +20,7 @@ const Login = () => {
                 localStorage.setItem('adminKey', import.meta.env.VITE_ADMIN_KEY);
                 navigate('/admindashboard');
             } else {
-                setError('Invalid email or password. Please try again.');
+                setError('Invalid email or password.');
             }
             setLoading(false);
         }, 800);
