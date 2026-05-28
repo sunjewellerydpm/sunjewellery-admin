@@ -292,6 +292,7 @@ const AddProduct = () => {
                                     <option value="ladies-rings">Ladies Rings</option>
                                     <option value="gents-rings">Gents Rings</option>
                                     <option value="studs-earrings">Studs & Earrings</option>
+                                    <option value="chokers">New Category</option>
                                 </select>
                             </div>
                             <div className="form-group">
